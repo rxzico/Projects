@@ -1,0 +1,238 @@
+// Author: Raziuddin Mohammad
+// Course: COSC 2436
+// Program: SchoolRankReportRM.cpp
+
+#include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+class node
+{
+public:
+    string firstName;
+    string lastName;
+    int grade;
+    int skipped;
+    string school;
+    string exam;
+    node(string firstName, string lastName, int score, int skipped,
+         string schoolName, string examType)
+        : firstName(firstName), lastName(lastName), grade(score),
+          skipped(skipped), school(schoolName), exam(examType){};
+};
+
+class Heap
+{
+public:
+    bool isEmpty() { return heap.size() == 0; }
+    void insert(node *info)
+    {
+        int parent = 0;
+
+        heap.push_back(info);
+        curr = heap.size() - 1;
+        parent = (curr - 1) / 2;
+
+        if (heap.size() > 1)
+        {
+            while (heap.at(parent)->grade < heap.at(curr)->grade)
+            {
+                if (heap.at(curr)->grade > heap.at(parent)->grade)
+                {
+                    std::swap(heap.at(parent), heap.at(curr));
+                    curr = parent;
+                    parent = (parent - 1) / 2;
+                }
+            }
+        }
+    }
+
+    void remove_max()
+    {
+        if (heap.empty())
+            return;
+
+        std::swap(heap.at(0), heap.at(heap.size() - 1));
+        heap.pop_back();
+
+        size_t parent = 0;
+        do
+        {
+            // take in first child slot
+            size_t child = 2 * parent + 1;
+            if (child < heap.size())
+            {
+                // calculate right child slot
+                size_t rchild = 2 * (parent + 1);
+                if (rchild < heap.size() && heap[rchild]->grade > heap[child]->grade)
+                    child = rchild;
+
+                // compare both slots
+                if (heap[child]->grade > heap[parent]->grade)
+                {
+                    std::swap(heap[child], heap[parent]);
+                    parent = child;
+                }
+                else
+                {
+                    // when parent is larger than children, stop
+                    break;
+                }
+            }
+            else
+            {
+                // reach node with no children
+                break;
+            }
+
+        } while (true);
+    }
+
+    node *max() { return heap.at(0); }
+
+    bool empty() { return heap.empty(); }
+
+private:
+    vector<node *> heap;
+    int curr = 0;
+};
+
+vector<node *> assign(vector<node *> &category, node *vector)
+{
+
+    category.push_back(vector);
+    if (category.size() > 1 &&
+        category[category.size() - 2]->grade == vector->grade &&
+        category[category.size() - 2]->skipped > vector->skipped)
+    {
+        swap(category[category.size() - 2], category[category.size() - 1]);
+    }
+
+    return category;
+};
+
+void print(vector<node *> category, string exam)
+{
+    if (category.size() == 0)
+    {
+        return;
+    }
+    cout << exam << " " << endl;
+    for (int i = 0; i < category.size(); i++)
+    {
+        cout << category[i]->lastName << " " << category[i]->firstName << " - "
+             << category[i]->school << ":" << category[i]->grade << " " << endl;
+    }
+    cout << endl;
+}
+
+int main()
+{
+
+    int i = 0;
+    Heap binary;
+    string fileName;
+    cout << "Enter a file name: ";
+    cin >> fileName;
+    fstream myfile(fileName);
+    string key;
+    getline(myfile, key);
+    string character;
+
+    string arr[41];
+
+    stringstream ssin(key);
+    while (ssin.good() && i < 41)
+    {
+        ssin >> arr[i];
+        ++i;
+    }
+    vector<node> data;
+    while (getline(myfile, character))
+    {
+
+        string characters[44];
+        int total = 0;
+        int skipped = 0;
+        int j = 0;
+        stringstream charac(character);
+        while (charac.good() && j < 44)
+        {
+            charac >> characters[j];
+            ++j;
+        }
+
+        for (int k = 4; k < 44; k++)
+        {
+            if (arr[k - 3] == characters[k])
+            {
+                total += 6;
+            }
+            else if (arr[k - 3] != characters[k] && characters[k] != "S")
+            {
+                total -= 2;
+            }
+            else if (characters[k] == "S")
+            {
+                skipped += 1;
+                total += 0;
+            }
+        }
+
+        node *newNode = new node(characters[0], characters[1], total, skipped,
+                                 characters[2], characters[3]);
+
+        binary.insert(newNode);
+    }
+    node *vd;
+    vector<node *> v1A, v2A, v3A, v4A, v5A, v6A; // Vector to store each exam type
+    while (!binary.isEmpty())
+    {
+        
+        // While loop which checks if the max heap is empty and removes max at every loop
+        vd = binary.max();
+        // CHECK THE EXAM TYPE SO AS TO ASSIGN EACH NODE TO THE APPROPRIATE VECTOR
+        // Check exam type to assign each node to appropiate vector
+        if (vd->exam == "1A")
+        {
+
+            assign(v1A, vd);
+        }
+        else if (vd->exam == "2A")
+        {
+            assign(v2A, vd);
+        }
+        else if (vd->exam == "3A")
+        {
+            assign(v3A, vd);
+        }
+        else if (vd->exam == "4A")
+        {
+            assign(v4A, vd);
+        }
+        else if (vd->exam == "5A")
+        {
+            assign(v5A, vd);
+        }
+        else if (vd->exam == "6A")
+        {
+            assign(v6A, vd);
+        }
+        binary.remove_max(); // Function to remove each max
+    }
+
+    print(v1A, "1A");
+    print(v2A, "2A");
+    print(v3A, "3A");
+    print(v4A, "4A");
+    print(v5A, "5A");
+    print(v6A, "6A");
+
+    return 0;
+}
+

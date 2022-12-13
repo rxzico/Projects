@@ -1,0 +1,208 @@
+// Author: Raziuddin Mohammad
+// Course: COSC 2436
+// Program: GraphConnectionRM.cpp
+
+#include <iostream>
+#include <set>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <climits>
+
+using namespace std;
+
+// using ufjdkd algo to find shortest path and return shortest 
+// steps to the destination
+
+
+
+int ufjdkd(vector<int> adj[], int src, int destination)
+
+{
+
+    // make a distance array for max possible node and initialize with 9999
+
+    int distance[27];
+
+    fill(distance, distance + 27, 9999);
+
+    // intilize the source distance with zero
+
+    distance[src] = 0;
+
+    // make a set data structure to check if nodes are done or not
+
+    set<int> set;
+
+    while (set.size() != 27)
+
+    {
+
+        int mx = INT_MAX;
+
+        int index = 0;
+
+        // to not tranverse each node in graph
+
+        for (int i = 0; i < 27 + 1; i++)
+
+        {
+
+            // get minimum distance
+
+            if (distance[i] < mx && set.find(i) == set.end())
+
+            {
+
+                mx = distance[i];
+
+                index = i;
+            }
+        }
+
+        auto x = index;
+
+        set.insert(x);
+
+        // check if any other path is more effecient 
+
+        for (int i = 0; i < adj[x].size(); i++)
+
+        {
+
+            if (distance[x] + 1 < distance[adj[x][i]])
+
+            {
+
+                distance[adj[x][i]] = distance[x] + 1;
+            }
+        }
+    }
+
+    // return distance by source and destination 
+
+    return distance[destination];
+}
+
+//function will input graph, output file also as input and will add string to output file
+
+void fun(vector<int> adj[], int size)
+
+{
+    cout << size << endl;
+    if (size)
+    {
+        for (int i = 1; i <= size; i++)
+
+        {
+
+            // declare a string "temp"
+
+            string temp;
+
+            // make the required matrix
+
+            for (int j = 1; j <= size; j++)
+
+            {
+
+                temp = temp + to_string(ufjdkd(adj, i, j));
+
+                temp.push_back(' ');
+            }
+
+            // print on console 
+
+            cout << temp << endl;
+        }
+    };
+}
+
+int main()
+
+{
+
+    // read file name
+    string files;
+    cout << "Enter a file name: ";
+    cin >> files;
+    ifstream file(files);
+
+    // to store single line of the file
+
+    string line;
+
+    // count total matrix
+
+    int count = 1;
+
+    // take each line as input
+
+    while (getline(file, line))
+
+    {
+
+        // if size of line is zero then skip
+
+        if (line.size() == 0)
+
+            continue;
+
+        // read each word present in line
+
+        istringstream ss(line);
+
+        string word;
+
+        bool foundNumber = false;
+
+        // make adjacency matrix to store graph data
+
+        vector<int> adj[27];
+
+        int num = 0;
+
+        // read each word in line 
+
+        while (ss >> word)
+
+        {
+
+            // First word is # of nodes in graph
+
+            if (foundNumber == false)
+
+            {
+
+                num = stoi(word);
+
+                foundNumber = true;
+            }
+
+            // rest of words are edge in graph
+
+            else
+
+            {
+
+                adj[word[0] - 'A' + 1].push_back(word[1] - 'A' + 1);
+
+                adj[word[1] - 'A' + 1].push_back(word[0] - 'A' + 1);
+            }
+        }
+
+        // call funtion to get desired output
+
+        cout << "Matrix " << count << endl;
+
+        fun(adj, num);
+
+        count++;
+    }
+
+    // close the file
+
+    file.close();
+}
+
